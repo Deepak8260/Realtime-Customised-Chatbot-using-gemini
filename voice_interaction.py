@@ -13,11 +13,11 @@ def handle_voice_interaction(model):
     # Record audio using streamlit-mic-recorder
     audio_data = mic_recorder(start_prompt="🎤 Click to record and speak...", key="recorder")
 
-    if audio_data:
+    if audio_data and "bytes" in audio_data:  # ✅ Ensure bytes exist
         try:
             # Save the recorded audio to a temporary file
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
-                temp_audio.write(audio_data)
+                temp_audio.write(audio_data["bytes"])  # ✅ Extract audio bytes
                 temp_audio_path = temp_audio.name
 
             # Convert speech to text
