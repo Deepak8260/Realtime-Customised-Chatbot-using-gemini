@@ -1,18 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
-import os
-from dotenv import load_dotenv
 from text_interaction import handle_text_interaction
 from voice_interaction import handle_voice_interaction
 
-# Load environment variables
-load_dotenv()
-
-# Get API key from environment variable
-api_key = os.getenv("GENAI_API_KEY")
+# Get API key from Streamlit secrets
+api_key = st.secrets["GENAI_API_KEY"]
 
 if not api_key:
-    st.error("API Key is missing! Please set GENAI_API_KEY in your .env file.")
+    st.error("API Key is missing! Please set it in Streamlit Cloud secrets.")
 else:
     # Configure API key
     genai.configure(api_key=api_key)
