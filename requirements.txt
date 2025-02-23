@@ -1,7 +1,6 @@
 streamlit
 google-generativeai
 speechrecognition
-sounddevice
 numpy
 gtts
-scipy
+streamlit-mic-recorder
