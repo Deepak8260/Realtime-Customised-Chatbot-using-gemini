@@ -2,7 +2,7 @@ import streamlit as st
 import speech_recognition as sr
 import numpy as np
 import tempfile
-import scipy.io.wavfile as wav
+import wave
 from tts_engine import speak_text
 from streamlit_mic_recorder import mic_recorder
 
@@ -15,9 +15,13 @@ def handle_voice_interaction(model):
 
     if audio_data and "bytes" in audio_data:  # ✅ Ensure bytes exist
         try:
-            # Save the recorded audio to a temporary file
+            # Save the recorded audio as a valid WAV file
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
-                temp_audio.write(audio_data["bytes"])  # ✅ Extract audio bytes
+                with wave.open(temp_audio, 'wb') as wav_file:
+                    wav_file.setnchannels(1)  # Mono channel
+                    wav_file.setsampwidth(2)  # Sample width of 2 bytes
+                    wav_file.setframerate(44100)  # Standard sample rate
+                    wav_file.writeframes(audio_data["bytes"])  # ✅ Write proper WAV format
                 temp_audio_path = temp_audio.name
 
             # Convert speech to text
