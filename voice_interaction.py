@@ -1,44 +1,37 @@
 import streamlit as st
 import speech_recognition as sr
-import numpy as np
-import tempfile
-import wave
 from tts_engine import speak_text
-from streamlit_mic_recorder import mic_recorder
 
 def handle_voice_interaction(model):
-    """Handles voice-to-voice chatbot interaction using streamlit-mic-recorder"""
+    """Handles voice-to-voice chatbot interaction"""
     st.write("Click the button below and speak to the chatbot.")
 
-    # Record audio using streamlit-mic-recorder
-    audio_data = mic_recorder(start_prompt="🎤 Click to record and speak...", key="recorder")
+    if st.button("🎙️ Start Voice Interaction"):
+        recognizer = sr.Recognizer()
 
-    if audio_data and "bytes" in audio_data:  # ✅ Ensure bytes exist
         try:
-            # Save the recorded audio as a valid WAV file
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
-                with wave.open(temp_audio, 'wb') as wav_file:
-                    wav_file.setnchannels(1)  # Mono channel
-                    wav_file.setsampwidth(2)  # Sample width of 2 bytes
-                    wav_file.setframerate(44100)  # Standard sample rate
-                    wav_file.writeframes(audio_data["bytes"])  # ✅ Write proper WAV format
-                temp_audio_path = temp_audio.name
+            with sr.Microphone() as source:
+                # Adjust for background noise before listening
+                recognizer.adjust_for_ambient_noise(source, duration=1)
+                st.write("Listening... Speak now!")
 
-            # Convert speech to text
-            recognizer = sr.Recognizer()
-            with sr.AudioFile(temp_audio_path) as source:
-                audio = recognizer.record(source)
+                # Listen for the user's speech
+                audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
+                
+                # Convert speech to text
                 user_input = recognizer.recognize_google(audio)
                 st.write(f"🗣️ You said: {user_input}")
 
-                # Get AI response
+                # Get AI Response
                 response = model.generate_content(user_input)
                 st.write(f"🤖 AI says: {response.text}")
 
                 # Convert AI response to speech
                 speak_text(response.text)
 
+        except sr.WaitTimeoutError:
+            st.write("❌ No speech detected within the time limit. Please try again.")
         except sr.UnknownValueError:
-            st.write("❌ Could not understand audio. Please try again.")
+            st.write("❌ Sorry, I couldn't understand that. Please speak clearly.")
         except sr.RequestError:
-            st.write("❌ Issue with speech recognition service. Please try again.")
+            st.write("❌ There was an issue with the speech recognition service. Please try again.")

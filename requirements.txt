@@ -1,6 +1,7 @@
 streamlit
 google-generativeai
-speechrecognition
-numpy
-gtts
-streamlit-mic-recorder
+python-dotenv
+SpeechRecognition
+pyttsx3
+pyaudio
+pipwin
