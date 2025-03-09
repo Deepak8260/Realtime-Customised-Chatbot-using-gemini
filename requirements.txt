@@ -1,7 +1,6 @@
 streamlit
 google-generativeai
 speechrecognition
-pyaudio
 gtts
 python-dotenv
 
