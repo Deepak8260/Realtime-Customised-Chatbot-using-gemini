@@ -11,14 +11,10 @@ def handle_voice_interaction(model):
 
         try:
             with sr.Microphone() as source:
-                # Adjust for background noise before listening
                 recognizer.adjust_for_ambient_noise(source, duration=1)
                 st.write("Listening... Speak now!")
-
-                # Listen for the user's speech
                 audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
                 
-                # Convert speech to text
                 user_input = recognizer.recognize_google(audio)
                 st.write(f"🗣️ You said: {user_input}")
 
@@ -26,8 +22,9 @@ def handle_voice_interaction(model):
                 response = model.generate_content(user_input)
                 st.write(f"🤖 AI says: {response.text}")
 
-                # Convert AI response to speech
-                speak_text(response.text)
+                # Convert AI response to speech and play it
+                audio_bytes = speak_text(response.text)
+                st.audio(audio_bytes, format="audio/mp3")
 
         except sr.WaitTimeoutError:
             st.write("❌ No speech detected within the time limit. Please try again.")
