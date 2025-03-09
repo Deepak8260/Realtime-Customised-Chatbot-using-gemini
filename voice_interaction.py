@@ -1,34 +1,45 @@
 import streamlit as st
 import speech_recognition as sr
-from tts_engine import speak_text
+import sounddevice as sd
+import numpy as np
+from gtts import gTTS
+import os
+
+def record_audio(duration=5, sample_rate=16000):
+    """Record audio from the microphone and return it as a NumPy array."""
+    st.write("🎤 Listening... Speak now.")
+    audio_data = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype=np.int16)
+    sd.wait()  # Wait for recording to complete
+    return np.squeeze(audio_data)
 
 def handle_voice_interaction(model):
-    """Handles voice-to-voice chatbot interaction"""
-    st.write("Click the button below and speak to the chatbot.")
-
-    if st.button("🎙️ Start Voice Interaction"):
+    """Handles voice-based interaction with the chatbot model."""
+    st.write("Click the button below to start recording your voice.")
+    
+    # ✅ Button to trigger voice recording
+    if st.button("🎙️ Start Recording"):
         recognizer = sr.Recognizer()
-
+        
+        # Record voice
+        audio_array = record_audio()
+        audio_data = sr.AudioData(audio_array.tobytes(), sample_rate=16000, sample_width=2)
+        
         try:
-            with sr.Microphone() as source:
-                recognizer.adjust_for_ambient_noise(source, duration=1)
-                st.write("Listening... Speak now!")
-                audio = recognizer.listen(source, timeout=10, phrase_time_limit=5)
-                
-                user_input = recognizer.recognize_google(audio)
-                st.write(f"🗣️ You said: {user_input}")
+            text = recognizer.recognize_google(audio_data)
+            st.write(f"🗣️ You said: {text}")
 
-                # Get AI Response
-                response = model.generate_content(user_input)
-                st.write(f"🤖 AI says: {response.text}")
+            # ✅ Generate response using Gemini model
+            response = model.generate_content(text)
+            response_text = response.text  # Extract the generated text
 
-                # Convert AI response to speech and play it
-                audio_bytes = speak_text(response.text)
-                st.audio(audio_bytes, format="audio/mp3")
+            st.write(f"🤖 Bot: {response_text}")
 
-        except sr.WaitTimeoutError:
-            st.write("❌ No speech detected within the time limit. Please try again.")
+            # Convert response text to speech
+            tts = gTTS(response_text, lang="en")
+            tts.save("response.mp3")
+            os.system("start response.mp3")  # Windows: 'start', Linux: 'mpg321', Mac: 'afplay'
+
         except sr.UnknownValueError:
-            st.write("❌ Sorry, I couldn't understand that. Please speak clearly.")
+            st.write("❌ Sorry, could not understand the audio.")
         except sr.RequestError:
-            st.write("❌ There was an issue with the speech recognition service. Please try again.")
+            st.write("❌ Could not request results, check your internet connection.")
